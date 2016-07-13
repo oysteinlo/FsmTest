@@ -1,5 +1,6 @@
 #pragma once
 #include "FsmManager.h"
+#include "IoDef.h"
 
 /*****************************************************************
 * typedefs
@@ -30,7 +31,7 @@ void stateEval(fsmData_t *pFsm);
 void getIOValues(void);
 
 
-void InitFsmTest(fsmData_t *pFsm);
+void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut);
 void RunFsmTest(fsmData_t *pFsm);
 
 

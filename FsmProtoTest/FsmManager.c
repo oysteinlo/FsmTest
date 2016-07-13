@@ -1,17 +1,59 @@
+#include <stdio.h>
 #include "FsmManager.h"
 
 void stateEval(fsmData_t *pFsm)
 {
-	int s = 4;
-	//unsigned int array[ 100 ][ 150 ];
-	//unsigned int(*array)[150] = (unsigned int(*)[150]) ptr;
+	int i;
 	
-	stateElement_t (*pStateMatrix)[4] = (stateElement_t(*)[4])pFsm->pTransitionMatrix;
-	
-	//pStateMatrix[0][0] = pFsm->pTransitionMatrix;
-	
+
 	//determine the State-Matrix-Element in dependany of current state and triggered event
-	pFsm->presentState = pStateMatrix[pFsm->presentState][pFsm->ev].nextState;
+	pFsm->enter = 0;
+	
+	for (i = 0; i < pFsm->numEvents; i++)
+	{
+		transElement_t *pTransition = pFsm->pTransitionMatrix + (pFsm->presentState*pFsm->numEvents + i);
+		
+		if (pTransition->pTrigger)
+		{
+			if (*pTransition->pTrigger)
+			{
+				if (pFsm->presentState != pTransition->nextState)
+				{
+					pFsm->enter = 1;
+					printf("Next state %s\n", pFsm->pState[pTransition->nextState].name);
+				}
+				pFsm->presentState = pTransition->nextState;
+				break;
+			}
+		}
+	}
+
+	/* Set output according to mapped IO*/
+	for (i = 0; i < pFsm->numStates; i++)
+	{
+		if (pFsm->pState[i].pOutput == NULL)
+		{
+			break;
+		}
+		if (pFsm->presentState == i)
+		{
+			*pFsm->pState[i].pOutput = 1;
+		}
+		else
+		{
+			*pFsm->pState[i].pOutput = 0;
+		}
+	}
+
+	//if (pFsm->presentState != pTransition->nextState)
+	//{ 
+	//	pFsm->enter = 1;
+	//	pFsm->presentState = pTransition->nextState;
+	//}
+	//else
+	//{
+	//	pFsm->enter = 0;
+	//}
 	
 
 	//do the transition to the next state (set requestet next state to current state)...

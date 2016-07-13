@@ -32,5 +32,8 @@
     <ClInclude Include="FsmManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IoDef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

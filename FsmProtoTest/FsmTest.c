@@ -5,20 +5,34 @@
 
 
 
-void InitFsmTest(fsmData_t *pFsm)
+
+void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut)
 {
-	stateElement_t stateMatrix[NUMOFSTATES][NUMOFEVENTS] =
-	{	//eStartReq,								eStarted							eStopReq							eStopped
-		{ { eStarting, "Stopped->Starting"},	{ eRunning, "Stopped->Running" },	{ eStopping, "Stopped->Stopping" },		{ eStopped, "Stopped->Stopped" } },//eStopped
-		{ { eRunning, "Starting->Running" },	{ eRunning, "Started->Running" },	{ eStopping, "Starting->Stopping" },	{ eStopped, "Starting->Stopped" } },//eStarting
-		{ { eRunning, "Running->Running" },		{ eRunning, "Running->Running" },	{ eStopping, "Running->Stopping" },		{ eStopped, "Running->Stopped" } },//eRunning
-		{ { eStopping, "Running->Stopping" },	{ eRunning, "Stopping->Running" },	{ eStopping, "Stopping->Stopping" },	{ eStopped, "Stopping->Stopped" } },//eStopping
+	transElement_t stateMatrix[NUMOFSTATES][NUMOFEVENTS] =
+	{			//eStartReq,					eStarted (running)				eStopReq							eStopped
+/*eStopped*/	{ { eStarting, &pIn->startReq},	{ eRunning, &pIn->running },	{ eStopping, NULL },			{ eStopped, NULL } },//eStopped
+/*eStarting*/	{ { eStarting, NULL },			{ eRunning, &pIn->running },	{ eStopping, &pIn->stopReq },	{ eStopped, &pIn->stopped } },//eStarting
+/*eRunning*/	{ { eRunning, NULL },			{ eRunning, NULL },				{ eStopping, &pIn->stopReq },	{ eStopped, &pIn->stopped } },//eRunning
+/*eStopping*/	{ { eStarting, NULL },			{ eRunning, &pIn->running },	{ eStopping, NULL },			{ eStopped, &pIn->stopped } },//eStopping
 	};
 
-	pFsm->pTransitionMatrix = calloc(NUMOFSTATES*NUMOFEVENTS, sizeof(stateElement_t));
-	memcpy(pFsm->pTransitionMatrix, stateMatrix, NUMOFSTATES*NUMOFEVENTS*sizeof(stateElement_t));
+	stateElement_t states[NUMOFSTATES] =
+	{
+/*eStopped*/	{ &pOut->stopped, "Stopped" },
+/*eStarting*/	{ &pOut->startReq, "Starting" },
+/*eRunning*/	{ &pOut->run, "Running" },
+/*eStopping*/	{ &pOut->stopReq, "stopped"},
+	};
+
+	pFsm->pState = calloc(NUMOFSTATES, sizeof(stateElement_t));
+	memcpy(pFsm->pState, states, NUMOFSTATES*sizeof(stateElement_t));
+
+	pFsm->pTransitionMatrix = calloc(NUMOFSTATES*NUMOFEVENTS, sizeof(transElement_t));
+	memcpy(pFsm->pTransitionMatrix, stateMatrix, NUMOFSTATES*NUMOFEVENTS*sizeof(transElement_t));
 
 	pFsm->presentState = eStopped;
+	pFsm->numEvents = NUMOFEVENTS;
+	pFsm->numStates = NUMOFSTATES;
 }
 
 void RunFsmTest(fsmData_t *pFsm)
