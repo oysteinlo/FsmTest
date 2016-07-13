@@ -32,6 +32,6 @@ void getIOValues(void);
 
 
 void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut);
-void RunFsmTest(fsmData_t *pFsm);
+void RunFsmTest(fsmData_t *pFsm, inputIo_t *pIn);
 
 

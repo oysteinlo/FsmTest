@@ -7,7 +7,7 @@
 
 void FsmRunner(void *pMyID);
 
-inputIo_t in = { 0,0,0,0 };
+inputIo_t in = { 0,0,0 };
 outputIo_t out = { 0,0,0,0 };
 
 int main()
@@ -33,13 +33,10 @@ int main()
 		case '3':
 			in.running = in.running ? 0 : 1;
 			break;
-		case '4':
-			in.stopped = in.stopped ? 0 : 1;
-			break;
 		default:
 			break;
 		}
-		printf("Input: %d %d %d %d\n", in.startReq, in.stopReq, in.running, in.stopped);
+		printf("Input: %d %d %d\n", in.startReq, in.stopReq, in.running);
 	}
 
 	return 0;
@@ -53,7 +50,7 @@ void FsmRunner(void *pMyID)
 
 	for (;;)
 	{
-		RunFsmTest(&fsm);
+		RunFsmTest(&fsm, &in);
 
 		printf("Output: %d %d %d %d\n", *fsm.pState[eStopped].pOutput, *fsm.pState[eStarting].pOutput, *fsm.pState[eRunning].pOutput, *fsm.pState[eStopping].pOutput);
 

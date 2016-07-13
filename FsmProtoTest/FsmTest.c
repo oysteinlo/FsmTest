@@ -10,18 +10,18 @@ void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut)
 {
 	transElement_t stateMatrix[NUMOFSTATES][NUMOFEVENTS] =
 	{			//eStartReq,					eStarted (running)				eStopReq							eStopped
-/*eStopped*/	{ { eStarting, &pIn->startReq},	{ eRunning, &pIn->running },	{ eStopping, NULL },			{ eStopped, NULL } },//eStopped
-/*eStarting*/	{ { eStarting, NULL },			{ eRunning, &pIn->running },	{ eStopping, &pIn->stopReq },	{ eStopped, &pIn->stopped } },//eStarting
-/*eRunning*/	{ { eRunning, NULL },			{ eRunning, NULL },				{ eStopping, &pIn->stopReq },	{ eStopped, &pIn->stopped } },//eRunning
-/*eStopping*/	{ { eStarting, NULL },			{ eRunning, &pIn->running },	{ eStopping, NULL },			{ eStopped, &pIn->stopped } },//eStopping
+/*eStopped*/	{ { &pIn->startReq, eStarting },{ &pIn->running, eRunning },	{ NULL },						{ NULL	} },			//eStopped
+/*eStarting*/	{ { &pIn->startReq, eStarting },{ &pIn->running, eRunning },	{ NULL },						{ NULL, } },			//eStarting
+/*eRunning*/	{ { NULL },						{ NULL },						{ &pIn->stopReq, eStopping },	{ NULL, eStopped } },	//eRunning
+/*eStopping*/	{ { NULL },						{ NULL },						{ &pIn->stopReq, eStopping },	{ NULL, eStopped } },	//eStopping
 	};
 
 	stateElement_t states[NUMOFSTATES] =
 	{
-/*eStopped*/	{ &pOut->stopped, "Stopped" },
-/*eStarting*/	{ &pOut->startReq, "Starting" },
-/*eRunning*/	{ &pOut->run, "Running" },
-/*eStopping*/	{ &pOut->stopReq, "stopped"},
+/*eStopped*/	{ &pOut->stopped,	"Stopped" },
+/*eStarting*/	{ &pOut->startReq,	"Starting" },
+/*eRunning*/	{ &pOut->run,		"Running" },
+/*eStopping*/	{ &pOut->stopReq,	"Stopping"},
 	};
 
 	pFsm->pState = calloc(NUMOFSTATES, sizeof(stateElement_t));
@@ -35,9 +35,15 @@ void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut)
 	pFsm->numStates = NUMOFSTATES;
 }
 
-void RunFsmTest(fsmData_t *pFsm)
+void RunFsmTest(fsmData_t *pFsm, inputIo_t *pIn)
 {
+	// TODO: Any better way of inverting input????
+	int stopped = !pIn->running;
+	SetTrigger(pFsm, eRunning, eStopped, &stopped);
+	SetTrigger(pFsm, eStopping, eStopped, &stopped);
+
 	stateEval(pFsm);
+
 
 	switch (pFsm->presentState)
 	{

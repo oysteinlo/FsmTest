@@ -62,3 +62,10 @@ void stateEval(fsmData_t *pFsm)
 //	(*stateEvaluation.actionToDo)();
 	
 }
+
+void SetTrigger(fsmData_t *pFsm, state st, event ev, int *pVal)
+{
+	transElement_t *pTransition = pFsm->pTransitionMatrix + (st*pFsm->numEvents + ev);
+
+	pTransition->pTrigger = pVal;
+}

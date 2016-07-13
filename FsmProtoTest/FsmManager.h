@@ -11,8 +11,8 @@ typedef struct stateElementType
 
 typedef struct transitionElementType
 {
-	state nextState;       // Enumerator for the next state
 	int *pTrigger;
+	state nextState;       // Enumerator for the next state
 	char name[32];
 	action actionToDo;     // function-pointer to the action that shall be released in current state
 	int enter;
@@ -31,4 +31,5 @@ typedef struct fsmDataType
 	event ev;
 } fsmData_t;
 
+void SetTrigger(fsmData_t *pFsm, state st, event ev, int *pVal);
 
