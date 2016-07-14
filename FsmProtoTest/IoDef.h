@@ -4,6 +4,7 @@ typedef struct inputIoType
 	int startReq;
 	int stopReq;
 	int running;
+	int timeout;
 }inputIo_t;
 
 typedef struct outputType

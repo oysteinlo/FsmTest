@@ -7,31 +7,45 @@
 
 void FsmRunner(void *pMyID);
 
-inputIo_t in = { 0,0,0 };
+inputIo_t in = { 0,0,0,5 };
 outputIo_t out = { 0,0,0,0 };
+BOOL run;
 
 int main()
 {
-	int ThreadId = 0;
 	char inp = 0;
-	int trigger = 0;
 
-	_beginthread(FsmRunner, 0, &ThreadId);
+	/* Start thread simulating a cyclic task running state machine*/
+	_beginthread(FsmRunner, 0, NULL);
 
+	/* Read keyborad input to simulate input, q for quit*/
 	while (inp != 'q')
 	{
 		inp = _getch();
 
 		switch (inp)
 		{
-		case '1':
+		case '0':	/* Start and stop FSM running thread*/
+			if (run)
+			{
+				run = FALSE;
+			}
+			else
+			{
+				_beginthread(FsmRunner, 0, NULL);
+			}
+			break;
+		case '1':	/* Simulate start request*/
 			in.startReq = in.startReq ? 0: 1;
 			break;
-		case '2':
+		case '2':	/* Simulate stop request*/
 			in.stopReq = in.stopReq ? 0 : 1;
 			break;
-		case '3':
+		case '3':	/* Simulate running feedback*/
 			in.running = in.running ? 0 : 1;
+			break;
+		case '4':
+			in.timeout = 10;
 			break;
 		default:
 			break;
@@ -39,6 +53,7 @@ int main()
 		printf("Input: %d %d %d\n", in.startReq, in.stopReq, in.running);
 	}
 
+	run = FALSE;	/* Make sure FSM running thread is stopped*/
 	return 0;
 }
 
@@ -47,8 +62,9 @@ void FsmRunner(void *pMyID)
 	fsmData_t fsm = { 0 };
 
 	InitFsmTest(&fsm, &in, &out);
+	run = TRUE;
 
-	for (;;)
+	while (run)
 	{
 		RunFsmTest(&fsm, &in);
 
@@ -59,7 +75,11 @@ void FsmRunner(void *pMyID)
 	_endthread();
 }
 
-
-
-//TODO Inverted input
-//TODO Timer function
+/*
+void printfxy(int x, int y)
+{
+	COORD coord;
+	coord.X = x;
+	coord.Y = y;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}*/

@@ -1,21 +1,20 @@
 #include <stdio.h>
 #include "FsmManager.h"
 
-void stateEval(fsmData_t *pFsm)
+void StateEval(fsmData_t *pFsm)
 {
 	int i;
-	
 
-	//determine the State-Matrix-Element in dependany of current state and triggered event
+	/* Check all events and set next state*/
 	pFsm->enter = 0;
-	
 	for (i = 0; i < pFsm->numEvents; i++)
 	{
+		/* Little trick as I could not define double array, size is only known runtime. Generic part should not kbow anything about the specific state machine*/
 		transElement_t *pTransition = pFsm->pTransitionMatrix + (pFsm->presentState*pFsm->numEvents + i);
 		
-		if (pTransition->Guard)
+		if (pTransition->funcGuard)
 		{
-			if (pTransition->Guard(pTransition->pTrigger))
+			if (pTransition->funcGuard(pTransition->pTrigger))
 			{
 				if (pFsm->presentState != pTransition->nextState)
 				{
@@ -23,16 +22,15 @@ void stateEval(fsmData_t *pFsm)
 					pFsm->enter = 1;
 					SetStateTimer(&pFsm->pState[pFsm->presentState]);
 					printf("Next state %s\n", pFsm->pState[pTransition->nextState].name);
-				}
-				
-				break;
+				}				
 			}
 		}
 	}
 
-	/* Set output according to mapped IO*/
+	
 	for (i = 0; i < pFsm->numStates; i++)
 	{
+		/* Set output according to mapped IO*/
 		if (pFsm->pState[i].pOutput == NULL)
 		{
 			break;
@@ -46,34 +44,19 @@ void stateEval(fsmData_t *pFsm)
 			*pFsm->pState[i].pOutput = 0;
 		}
 
+		/* Update timer*/
 		if (pFsm->pState[i].timer > 0)
 		{
-			if (--pFsm->pState[i].timer == 0)
-			{
-
-			}
+			pFsm->pState[i].timer--;
 		}
 	}
-
-	//if (pFsm->presentState != pTransition->nextState)
-	//{ 
-	//	pFsm->enter = 1;
-	//	pFsm->presentState = pTransition->nextState;
-	//}
-	//else
-	//{
-	//	pFsm->enter = 0;
-	//}
-	
-
-	//do the transition to the next state (set requestet next state to current state)...
 	
 	//... and fire the proper action
-//	(*stateEvaluation.actionToDo)();
+	//	(*stateEvaluation.actionToDo)();
 	
 }
 
-void SetTrigger(fsmData_t *pFsm, state st, event ev, int *pVal)
+void SetTrigger(fsmData_t *pFsm, state_t st, event_t ev, int *pVal)
 {
 	transElement_t *pTransition = pFsm->pTransitionMatrix + (st*pFsm->numEvents + ev);
 
@@ -82,7 +65,10 @@ void SetTrigger(fsmData_t *pFsm, state st, event ev, int *pVal)
 
 void SetStateTimer(stateElement_t *pState)
 {
-	pState->timer = pState->timeout;
+	if (pState->pTimeout != NULL)
+	{
+		pState->timer = *pState->pTimeout;
+	}
 }
 
 
@@ -94,4 +80,14 @@ int DigNorm(int *pInp)
 int DigInv(int *pInp)
 {
 	return !*pInp;
+}
+
+int Timer(stateElement_t *state)
+{
+	return state->timer <= 0;
+}
+
+int DigIo(struct terminal *term)
+{
+	return 1;
 }

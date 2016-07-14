@@ -8,46 +8,41 @@
 
 void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut)
 {
-	int *pT = NULL;
-	transElement_t stateMatrix[NUMOFSTATES][NUMOFEVENTS] =
-	{			
-		{	/*eStopped*/
-			{ DigNorm, &pIn->startReq, eStarting },		
-			{ DigNorm, &pIn->running, eRunning },		
-			{ NULL },									
-			{ NULL	}									
-		},			
-		{	/*eStarting*/
-			{ DigNorm, &pIn->startReq, eStarting },		
-			{ DigNorm, &pIn->running, eRunning },		
-			{ DigNorm, &pIn->stopReq, eStopping },
-			{ NULL, }
-		},	
-		{	/*eRunning*/ 
-			{ NULL },									
-			{ NULL },									
-			{ DigNorm, &pIn->stopReq, eStopping },		
-			{ DigInv, &pIn->running, eStopped },		
-		},	
-		{	/*eStopping*/ 
-			{ NULL },									
-			{ NULL },									
-			{ DigNorm, &pIn->stopReq, eStopping },
-			{ DigInv, &pIn->running, eStopped }
-		},	
-	};
-
 	/* Setting state information */
 	stateElement_t states[NUMOFSTATES] =
 	{
 		{ &pOut->stopped,	"Stopped" },				/*eStopped*/
-		{ &pOut->startReq,	"Starting" },				/*eStarting*/
+		{ &pOut->startReq,	"Starting", &pIn->timeout },			/*eStarting*/
 		{ &pOut->run,		"Running" },				/*eRunning*/
-		{ &pOut->stopReq,	"Stopping" },				/*eStopping*/
+		{ &pOut->stopReq,	"Stopping", &pIn->timeout },			/*eStopping*/
 	};
 
 	pFsm->pState = calloc(NUMOFSTATES, sizeof(stateElement_t));
 	memcpy(pFsm->pState, states, NUMOFSTATES*sizeof(stateElement_t));
+
+	/* Setting transition information */
+	transElement_t stateMatrix[NUMOFSTATES][NUMOFEVENTS] =
+	{			
+		{	/*eStopped*/
+			{ DigNorm, &pIn->startReq, eStarting },			/*eEvStartReq*/
+			{ DigNorm, &pIn->running, eRunning },			/*eEvStarted*/
+		},			
+		{	/*eStarting*/
+			{ DigNorm, &pIn->startReq, eStarting },			/*eEvStartReq*/
+			{ DigNorm, &pIn->running, eRunning },			/*eEvStarted*/
+			{ DigNorm, &pIn->stopReq, eStopping },			/*eEvStopReq*/
+			{ Timer, &pFsm->pState[eStarting], eStopped },	/*Timeout, not really defined in the events????*/
+		},
+		{	/*eRunning*/ 
+			{ DigNorm, &pIn->stopReq, eStopping },			/*eEvStopReq*/
+			{ DigInv, &pIn->running, eStopped },			/*eEvStopped*/
+		},	
+		{	/*eStopping*/ 
+			{ DigNorm, &pIn->stopReq, eStopping },			/*eEvStopReq*/
+			{ DigInv, &pIn->running, eStopped },			/*eEvStopped*/
+			{ Timer, &pFsm->pState[eStopping], eRunning },	/*Timeout, not really defined in the events????*/
+		},
+	};
 
 	pFsm->pTransitionMatrix = calloc(NUMOFSTATES*NUMOFEVENTS, sizeof(transElement_t));
 	memcpy(pFsm->pTransitionMatrix, stateMatrix, NUMOFSTATES*NUMOFEVENTS*sizeof(transElement_t));
@@ -59,13 +54,7 @@ void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut)
 
 void RunFsmTest(fsmData_t *pFsm, inputIo_t *pIn)
 {
-	// TODO: Any better way of inverting input????
-	int stopped = !pIn->running;
-	SetTrigger(pFsm, eRunning, eStopped, &stopped);
-	SetTrigger(pFsm, eStopping, eStopped, &stopped);
-
-	stateEval(pFsm);
-
+	StateEval(pFsm);	/* Evaluate state and events + run generic part*/
 
 	switch (pFsm->presentState)
 	{
@@ -76,10 +65,6 @@ void RunFsmTest(fsmData_t *pFsm, inputIo_t *pIn)
 		}
 		printf("Doing eStopped\n");
 
-		if (pFsm->exit)
-		{
-			printf("Exit eStopped\n");
-		}
 		break;
 	case eStarting:
 		if (pFsm->enter)
@@ -88,10 +73,6 @@ void RunFsmTest(fsmData_t *pFsm, inputIo_t *pIn)
 		}
 		printf("Doing eStarting\n");
 
-		if (pFsm->exit)
-		{
-			printf("Exit eStarting\n");
-		}
 		break;
 	case eRunning:
 		if (pFsm->enter)
@@ -100,10 +81,6 @@ void RunFsmTest(fsmData_t *pFsm, inputIo_t *pIn)
 		}
 		printf("Doing eRunning\n");
 
-		if (pFsm->exit)
-		{
-			printf("Exit eRunning\n");
-		}
 		break;
 	case eStopping:
 		if (pFsm->enter)
@@ -112,10 +89,9 @@ void RunFsmTest(fsmData_t *pFsm, inputIo_t *pIn)
 		}
 		printf("Doing eStopping\n");
 
-		if (pFsm->exit)
-		{
-			printf("Exit eStopping\n");
-		}		break;
+		break;
+	default:
+		printf("Illegal state\n");
 	}
 }
 

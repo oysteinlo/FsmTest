@@ -12,7 +12,7 @@ typedef enum stateType{
 	eRunning,
 	eStopping,
 	NUMOFSTATES
-} state;
+} state_t;
 
 typedef enum eventType{
 	eEvStartReq,
@@ -20,15 +20,7 @@ typedef enum eventType{
 	eEvStopReq,
 	eEvStopped,
 	NUMOFEVENTS
-} event;
-
-
-
-
-// General functions
-void stateEval(fsmData_t *pFsm);
-//void exit(int status);
-void getIOValues(void);
+} event_t;
 
 
 void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut);
