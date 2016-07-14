@@ -8,20 +8,42 @@
 
 void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut)
 {
+	int *pT = NULL;
 	transElement_t stateMatrix[NUMOFSTATES][NUMOFEVENTS] =
-	{			//eStartReq,					eStarted (running)				eStopReq							eStopped
-/*eStopped*/	{ { &pIn->startReq, eStarting },{ &pIn->running, eRunning },	{ NULL },						{ NULL	} },			//eStopped
-/*eStarting*/	{ { &pIn->startReq, eStarting },{ &pIn->running, eRunning },	{ NULL },						{ NULL, } },			//eStarting
-/*eRunning*/	{ { NULL },						{ NULL },						{ &pIn->stopReq, eStopping },	{ NULL, eStopped } },	//eRunning
-/*eStopping*/	{ { NULL },						{ NULL },						{ &pIn->stopReq, eStopping },	{ NULL, eStopped } },	//eStopping
+	{			
+		{	/*eStopped*/
+			{ DigNorm, &pIn->startReq, eStarting },		
+			{ DigNorm, &pIn->running, eRunning },		
+			{ NULL },									
+			{ NULL	}									
+		},			
+		{	/*eStarting*/
+			{ DigNorm, &pIn->startReq, eStarting },		
+			{ DigNorm, &pIn->running, eRunning },		
+			{ DigNorm, &pIn->stopReq, eStopping },
+			{ NULL, }
+		},	
+		{	/*eRunning*/ 
+			{ NULL },									
+			{ NULL },									
+			{ DigNorm, &pIn->stopReq, eStopping },		
+			{ DigInv, &pIn->running, eStopped },		
+		},	
+		{	/*eStopping*/ 
+			{ NULL },									
+			{ NULL },									
+			{ DigNorm, &pIn->stopReq, eStopping },
+			{ DigInv, &pIn->running, eStopped }
+		},	
 	};
 
+	/* Setting state information */
 	stateElement_t states[NUMOFSTATES] =
 	{
-/*eStopped*/	{ &pOut->stopped,	"Stopped" },
-/*eStarting*/	{ &pOut->startReq,	"Starting" },
-/*eRunning*/	{ &pOut->run,		"Running" },
-/*eStopping*/	{ &pOut->stopReq,	"Stopping"},
+		{ &pOut->stopped,	"Stopped" },				/*eStopped*/
+		{ &pOut->startReq,	"Starting" },				/*eStarting*/
+		{ &pOut->run,		"Running" },				/*eRunning*/
+		{ &pOut->stopReq,	"Stopping" },				/*eStopping*/
 	};
 
 	pFsm->pState = calloc(NUMOFSTATES, sizeof(stateElement_t));
@@ -96,3 +118,4 @@ void RunFsmTest(fsmData_t *pFsm, inputIo_t *pIn)
 		}		break;
 	}
 }
+
