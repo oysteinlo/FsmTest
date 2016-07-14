@@ -3,18 +3,18 @@
 #include <string.h>
 #include "FsmTest.h"
 
-
-
+static void UnexpectedStart(fsmData_t *pFsm);
+static void UnexpectedStop(fsmData_t *pFsm);
 
 void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut)
 {
 	/* Setting state information */
 	stateElement_t states[NUMOFSTATES] =
 	{
-		{ &pOut->stopped,	"Stopped" },				/*eStopped*/
-		{ &pOut->startReq,	"Starting", &pIn->timeout },			/*eStarting*/
-		{ &pOut->run,		"Running" },				/*eRunning*/
-		{ &pOut->stopReq,	"Stopping", &pIn->timeout },			/*eStopping*/
+		{ &pOut->stopped,	"Stopped" },					/*eStopped*/
+		{ &pOut->startReq,	"Starting", &pIn->timeout },	/*eStarting*/
+		{ &pOut->run,		"Running" },					/*eRunning*/
+		{ &pOut->stopReq,	"Stopping", &pIn->timeout },	/*eStopping*/
 	};
 
 	pFsm->pState = calloc(NUMOFSTATES, sizeof(stateElement_t));
@@ -24,23 +24,23 @@ void InitFsmTest(fsmData_t *pFsm, inputIo_t *pIn, outputIo_t *pOut)
 	transElement_t stateMatrix[NUMOFSTATES][NUMOFEVENTS] =
 	{			
 		{	/*eStopped*/
-			{ DigNorm, &pIn->startReq, eStarting },			/*eEvStartReq*/
-			{ DigNorm, &pIn->running, eRunning },			/*eEvStarted*/
+			{ DigNorm, &pIn->startReq, eStarting },					/*eEvStartReq*/
+			{ DigNorm, &pIn->running, eRunning, UnexpectedStart },	/*eEvStarted*/
 		},			
 		{	/*eStarting*/
-			{ DigNorm, &pIn->startReq, eStarting },			/*eEvStartReq*/
-			{ DigNorm, &pIn->running, eRunning },			/*eEvStarted*/
-			{ DigNorm, &pIn->stopReq, eStopping },			/*eEvStopReq*/
-			{ Timer, &pFsm->pState[eStarting], eStopped },	/*Timeout, not really defined in the events????*/
+			{ DigNorm, &pIn->startReq, eStarting },					/*eEvStartReq*/
+			{ DigNorm, &pIn->running, eRunning },					/*eEvStarted*/
+			{ DigNorm, &pIn->stopReq, eStopping },					/*eEvStopReq*/
+			{ Timer, &pFsm->pState[eStarting], eStopped },			/*eEvTimeout*/
 		},
 		{	/*eRunning*/ 
-			{ DigNorm, &pIn->stopReq, eStopping },			/*eEvStopReq*/
-			{ DigInv, &pIn->running, eStopped },			/*eEvStopped*/
+			{ DigNorm, &pIn->stopReq, eStopping },					/*eEvStopReq*/
+			{ DigInv, &pIn->running, eStopped, UnexpectedStop },	/*eEvStopped*/
 		},	
 		{	/*eStopping*/ 
-			{ DigNorm, &pIn->stopReq, eStopping },			/*eEvStopReq*/
-			{ DigInv, &pIn->running, eStopped },			/*eEvStopped*/
-			{ Timer, &pFsm->pState[eStopping], eRunning },	/*Timeout, not really defined in the events????*/
+			{ DigNorm, &pIn->stopReq, eStopping },					/*eEvStopReq*/
+			{ DigInv, &pIn->running, eStopped },					/*eEvStopped*/
+			{ Timer, &pFsm->pState[eStopping], eRunning },			/*eEvTimeout*/
 		},
 	};
 
@@ -95,3 +95,12 @@ void RunFsmTest(fsmData_t *pFsm, inputIo_t *pIn)
 	}
 }
 
+static void UnexpectedStart(fsmData_t *pFsm)
+{
+	printf("UnexpectedStart-%d\n", pFsm->presentState);
+}
+
+static void UnexpectedStop(fsmData_t *pFsm)
+{
+	printf("UnexpectedStop-%d\n", pFsm->presentState);
+}

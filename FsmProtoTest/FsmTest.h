@@ -19,6 +19,7 @@ typedef enum eventType{
 	eEvStarted,
 	eEvStopReq,
 	eEvStopped,
+	eEvTimeout,
 	NUMOFEVENTS
 } event_t;
 

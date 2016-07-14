@@ -12,13 +12,17 @@ void StateEval(fsmData_t *pFsm)
 		/* Little trick as I could not define double array, size is only known runtime. Generic part should not kbow anything about the specific state machine*/
 		transElement_t *pTransition = pFsm->pTransitionMatrix + (pFsm->presentState*pFsm->numEvents + i);
 		
-		if (pTransition->funcGuard)
+		if (pTransition->funcGuard != NULL)
 		{
 			if (pTransition->funcGuard(pTransition->pTrigger))
 			{
 				if (pFsm->presentState != pTransition->nextState)
 				{
 					pFsm->presentState = pTransition->nextState;
+					if (pTransition->actionToDo != NULL)
+					{
+						pTransition->actionToDo(pFsm);
+					}
 					pFsm->enter = 1;
 					SetStateTimer(&pFsm->pState[pFsm->presentState]);
 					printf("Next state %s\n", pFsm->pState[pTransition->nextState].name);

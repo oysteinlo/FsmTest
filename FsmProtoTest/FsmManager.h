@@ -1,7 +1,7 @@
 
 
 typedef state_t;
-typedef void(*action)();
+typedef void(*action)(void *pA);
 typedef event_t;
 typedef int(*guard)(void *pA);
 
